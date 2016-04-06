@@ -93,9 +93,9 @@ var data = {
 	"Santiago de Compostela" : [42.8801996,-8.579789],	
 };
 
-var delay = 600;
+var delay = 60;
 var zoom = 10;
-var duration = 600;
+var duration = 60;
 var kms = 800;
 var days = 31;
 var curPoint = 0;
@@ -122,22 +122,29 @@ function beginJourney(){
 		points.push(data[key]);
 	}
 	var leg = function(){
+		
+		document.querySelector('#days').innerHTML = "Day " + Math.round(days/points.length * curPoint);
+		document.querySelector('#kms').innerHTML = Math.round(kms/points.length * curPoint) + "km Walked";
+		
+		
 		if(curPoint==0){
 			add(points[curPoint]);
 			mark(points[curPoint], keys[curPoint]);
 			window.setTimeout(leg, delay*6);
-		}else if (curPoint< points.length){
+		}else if (curPoint < points.length-1){
 			window.setTimeout(function(){
 				animTo(points[curPoint],function(){
 					mark(points[curPoint], keys[curPoint]);
 					leg();
 				})
 			}, delay);
+		} else { // Hacky
+			curPoint++;
+			document.querySelector('#days').innerHTML = "Day " + Math.round(days/points.length * curPoint);
+			document.querySelector('#kms').innerHTML = Math.round(kms/points.length * curPoint) + "km Walked";
 		}
-		curPoint++;
-		document.querySelector('#days').innerHTML = "Day " + Math.round(days/points.length * curPoint);
-		document.querySelector('#kms').innerHTML = Math.round(kms/points.length * curPoint) + "km Walked";
 		
+		curPoint++;
 	}
 	leg();
 }
@@ -179,7 +186,6 @@ map.on("zoom", function(e) {
 });
 
 beginJourney();
-
 </script>
 </body>
 </html>
