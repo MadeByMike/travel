@@ -6,13 +6,36 @@
 <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
 <script src='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.js'></script>
 <link href='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.css' rel='stylesheet' />
+<link href='https://fonts.googleapis.com/css?family=Pirata+One' rel='stylesheet' type='text/css'>
 <style>
   body { margin:0; padding:0; }
   #map { position:absolute; top:0; bottom:0; width:100%; }
+  #days,
+  #kms { 
+  position:absolute; 
+  right:0; 
+  bottom:50px; 
+  width:50%;  
+  color: #634d24;
+  text-align: right; 
+  font-size: 3em;
+	margin-right: 1em;  
+  -webkit-text-stroke: 1px white;
+  font-family: 'Pirata One', cursive;
+  text-shadow:
+       3px 3px 0 #FFF,
+     -1px -1px 0 #FFF,  
+      1px -1px 0 #FFF,
+      -1px 1px 0 #FFF,
+       1px 1px 0 #FFF;
+  }
+  #kms { top:50px; bottom: auto; width:50%;}
 </style>
 </head>
 <body>
 <div id='map'></div>
+<div id='days'>Day 1</div>
+<div id='kms'>0km Walked</div>
 <script>
 var lerpf = function(start, end, duration) {
 	this.start = start || 0;
@@ -59,12 +82,22 @@ var data = {
 	"Rabanal del Camino" : [42.4817279,-6.2878366],
 	"Molinaseca" : [42.5375322,-6.5245702],
 	"Cacabelos" : [42.5986808,-6.7423721],
-	
+	"Vega de Valcarce" : [42.6643365,-6.9542767],
+	"Alto de Poyo" : [42.7120342,-7.1249255],
+	"Calbor" : [42.7789647,-7.4290057],
+	"Portomarin" : [42.8081689,-7.6251987],
+	"Ponte Campana" : [42.8081689,-7.6251987],
+	"Ribadiso, Spain" : [42.9382834,-8.1569251],
+	"Arca do Pino" : [42.900209,-8.3831462],
+	"Santiago de Compostela" : [42.8801996,-8.579789],	
 };
 
 var delay = 600;
 var zoom = 10;
 var duration = 600;
+var kms = 800;
+var days = 31;
+var curPoint = 0;
 
 function first(obj) {
     for (var a in obj) return a;
@@ -81,7 +114,6 @@ function beginJourney(){
 
 	var keys = [];
 	var points = [];
-	var curPoint = 0;
 	for (var key in data) {
 		// skip loop if the property is from prototype
 		if (!data.hasOwnProperty(key)) continue;
@@ -102,6 +134,9 @@ function beginJourney(){
 			}, delay);
 		}
 		curPoint++;
+		document.querySelector('#days').innerHTML = "Day " + Math.round(days/points.length * curPoint);
+		document.querySelector('#kms').innerHTML = Math.round(kms/points.length * curPoint) + "km Walked";
+		
 	}
 	leg();
 }
@@ -117,7 +152,7 @@ function mark(pos,title){
 	//ToDO
 	L.marker(new L.LatLng(pos[0],pos[1]), {
 		icon: L.mapbox.marker.icon({
-			'marker-color': 'ff8888'
+			'marker-color': '7a653c'
 		})
 	}).bindPopup(title).addTo(map);
 }
