@@ -86,7 +86,7 @@ function beginJourney(){
 		if(curPoint==0){
 			add(points[curPoint]);
 			mark(points[curPoint], keys[curPoint]);
-			window.setTimeout(leg, delay*4);
+			window.setTimeout(leg, delay*6);
 		}else if (curPoint< points.length){
 			window.setTimeout(function(){
 				animTo(points[curPoint],function(){
