@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8 />
+<title>Draw &amp; animate a line on a map</title>
+<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+<script src='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.js'></script>
+<link href='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.css' rel='stylesheet' />
+<style>
+  body { margin:0; padding:0; }
+  #map { position:absolute; top:0; bottom:0; width:100%; }
+</style>
+</head>
+<body>
+<div id='map'></div>
+<script>
+var lerpf = function(start, end, duration) {
+	this.start = start || 0;
+	this.end = end || 0;
+	this.duration = duration || 5000;
+	this._startTime = new Date().getTime();
+	
+	this.tick = function() {
+		var elapsed = new Date().getTime() - this._startTime;
+		if (elapsed >= this.duration) {
+			return end;
+		}
+		var v = (this.duration - elapsed) / this.duration;
+		return (this.start * v) + (this.end * (1-v));
+	};
+	
+	return this;
+};
+var data = {
+	"Saint Jean Pied de Port" : [43.1570065,-1.251297],
+	"Roncesvalles" : [43.0092949,-1.3218817],
+	"Larrasoana" : [42.9020177,-1.5464834],
+	"Cizur Menor" : [42.786516,-1.677037],
+	"Puente la Reina" : [42.672304,-1.813594],
+	"Estella" : [42.672086,-2.032452],
+	"Los Arcos" : [42.568487,-2.191654],
+	"Viana" : [42.515448,-2.372724],
+	"Navarrete" : [42.4290505,-2.5789358],
+	"Najera" : [42.416741,-2.729462],
+	"St Dom de la Calz" : [42.4363137,-2.9778535],
+	"Belorado" : [42.4207062,-3.2073179],
+	"San Juan de Ortega" : [42.3753488,-3.4381867],
+	"Burgos" : [42.3441047,-3.7647326],
+	"Hornillos del Camino" : [42.3388769,-3.9306895],
+	"Castrojeriz" : [42.2897815,-4.1541518],
+	"Fromista" : [42.26705,-4.4140027],
+	"Carrion de los Condes" : [42.3409294,-4.6196845],
+	"Terradillos de los Templarios" : [42.3630525,-4.8944402],
+	"Bercianos del Real Camino" : [42.3874234,-5.1479934],
+	"Mansilla de las Mulas" : [42.4946852,-5.4248565],
+	
+};
+
+var delay = 600;
+var zoom = 10;
+var duration = 600;
+
+function first(obj) {
+    for (var a in obj) return a;
+}
+
+L.mapbox.accessToken = 'pk.eyJ1IjoibWFkZWJ5bWlrZSIsImEiOiJsRmJ2WTFvIn0.vAjq0NGB6sn-6gy48wGH2Q';
+
+var map = L.mapbox.map('map', 'mapbox.pirates');
+
+var polyline = L.polyline([]).addTo(map);
+var currentPos = [0,0];
+
+function beginJourney(){
+
+	var keys = [];
+	var points = [];
+	var curPoint = 0;
+	for (var key in data) {
+		// skip loop if the property is from prototype
+		if (!data.hasOwnProperty(key)) continue;
+		keys.push(key);
+		points.push(data[key]);
+	}
+	var leg = function(){
+		if(curPoint==0){
+			add(points[curPoint]);
+			mark(points[curPoint], keys[curPoint]);
+			window.setTimeout(leg, delay*4);
+		}else if (curPoint< points.length){
+			window.setTimeout(function(){
+				animTo(points[curPoint],function(){
+					mark(points[curPoint], keys[curPoint]);
+					leg();
+				})
+			}, delay);
+		}
+		curPoint++;
+	}
+	leg();
+}
+
+function add(point) {
+    polyline.addLatLng(
+        L.latLng(point)
+	);
+    map.setView(point, zoom);
+	currentPos = point;
+}
+function mark(pos,title){
+	//ToDO
+	L.marker(new L.LatLng(pos[0],pos[1]), {
+		icon: L.mapbox.marker.icon({
+			'marker-color': 'ff8888'
+		})
+	}).bindPopup(title).addTo(map);
+}
+function animTo(point, cb){
+	var lerpLat = new lerpf(currentPos[0],point[0], duration);
+	var lerpLon = new lerpf(currentPos[1],point[1], duration);
+	var animate = function (){
+		var v1 = lerpLat.tick();
+		var v2 = lerpLon.tick();
+		add([v1,v2]);
+		if(v1 !== lerpLat.end){
+			window.setTimeout(animate, 100);	
+		}else{
+			cb();
+		}
+	}
+	animate();
+}
+//ToDo: fix
+map.on("zoom", function(e) {
+  console.log("Current map zoom is: ", map.zoom());
+  zoom = map.zoom();
+});
+
+beginJourney();
+
+</script>
+</body>
+</html>
