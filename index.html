@@ -108,9 +108,26 @@ L.mapbox.accessToken = 'pk.eyJ1IjoibWFkZWJ5bWlrZSIsImEiOiJsRmJ2WTFvIn0.vAjq0NGB6
 
 var map = L.mapbox.map('map', 'mapbox.pirates');
 
+    
 var polyline = L.polyline([]).addTo(map);
 var currentPos = [0,0];
- 
+	map.setView(currentPos, zoom);
+	
+function animate(start,end,duration,cb,done){
+	console.log(start +':'+ end);
+	var lerp = new lerpf(start,end,duration);
+	innerAnimate = function (){
+		var v1 = lerp.tick();
+		cb(v1);
+		if(v1 !== lerp.end){
+			window.setTimeout(innerAnimate, 10);	
+		}else{
+			done();
+		}
+	}
+	innerAnimate();
+}	
+
 function beginJourney(){
 
 	var keys = [];
@@ -124,20 +141,26 @@ function beginJourney(){
 	var leg = function(){
 		
 		document.querySelector('#days').innerHTML = "Day " + Math.round(days/points.length * curPoint);
-		document.querySelector('#kms').innerHTML = Math.round(kms/points.length * curPoint) + "km Walked";
-		
-		
+
 		if(curPoint==0){
 			add(points[curPoint]);
 			mark(points[curPoint], keys[curPoint]);
 			window.setTimeout(leg, delay*6);
 		}else if (curPoint < points.length-1){
+
 			window.setTimeout(function(){
 				animTo(points[curPoint],function(){
 					mark(points[curPoint], keys[curPoint]);
 					leg();
 				})
 			}, delay);
+			
+			window.setTimeout(function(){
+				animate(Math.round(kms/points.length * curPoint), Math.round(kms/points.length * (curPoint+1)),duration,function(n){
+					document.querySelector('#kms').innerHTML = Math.round(n) + "kms Walked";
+				},function(){});
+			}, delay);
+			
 		} else { // Hacky
 			curPoint++;
 			document.querySelector('#days').innerHTML = "Day " + Math.round(days/points.length * curPoint);
@@ -153,17 +176,17 @@ function add(point) {
     polyline.addLatLng(
         L.latLng(point)
 	);
-    map.setView(point, zoom);
 	currentPos = point;
 }
 function mark(pos,title){
-	//ToDO
 	L.marker(new L.LatLng(pos[0],pos[1]), {
 		icon: L.mapbox.marker.icon({
 			'marker-color': '7a653c'
 		})
 	}).bindPopup(title).addTo(map);
+	map.setView(pos, map.getZoom());
 }
+
 function animTo(point, cb){
 	var lerpLat = new lerpf(currentPos[0],point[0], duration);
 	var lerpLon = new lerpf(currentPos[1],point[1], duration);
@@ -171,21 +194,18 @@ function animTo(point, cb){
 		var v1 = lerpLat.tick();
 		var v2 = lerpLon.tick();
 		add([v1,v2]);
-		if(v1 !== lerpLat.end){
-			window.setTimeout(animate, 100);	
+		if(v1 !== lerpLat.end){ // This is bad but prob safe -assumes both v1 and v2 are finshed
+			window.setTimeout(animate, 10);	
 		}else{
 			cb();
 		}
 	}
 	animate();
 }
-//ToDo: fix
-map.on("zoom", function(e) {
-  console.log("Current map zoom is: ", map.zoom());
-  zoom = map.zoom();
-});
 
 beginJourney();
+
+
 </script>
 </body>
 </html>
